@@ -1,6 +1,5 @@
 async function startProgram() {
 	// Write code here
-
 	let num = 0;
 	mode = ["easy", "normal", "hard"];
 
@@ -31,11 +30,13 @@ async function startProgram() {
 		}else if (P > 20 || P < -20){
 		    await speak(String(mode[num]) + "ですね")
 			break;
-        }
+        	}	
         await delay(0.5);
 	}
-	mode = num + 2;
-	
+	mode = num + 2; 
+	// mode -->> 2 easy
+	// mode -->> 3 normal
+	// mode -->> 4 hard
     let number = new Array(mode);
 	while (true) {
 		for (i = 0; i <= (mode - 1); i++) {
@@ -50,25 +51,25 @@ async function startProgram() {
 				break;
 			}
 		}else if (mode == 4){
-            if (number[0] != number[1] && number[0] !== number[2] && number[0] !== number[3] && number[1] !== number[2] &&
-                number[1] !== number[3] && number[2] !== number[3]){
-                break;
-            }	
+            		if (number[0] != number[1] && number[0] !== number[2] && number[0] !== number[3] && number[1] !== number[2] && number[1] !== number[3] && number[2] !== number[3]){
+                		break;
+            		}	
 		}
 		await delay(0.01);
 	}
 	//await speak(String(number)); sphero が考える値
-	
+	//ここからプレイヤーの予想
+	JudgeNumber == "False";
 	while(JudgeNumber == "True"){
-        let answer = new Array(mode);
-        for (x = 0; x < mode; x++){
-            answer[x] = getNumber();
-        }
-        await speak(String(answer));
-        var sum1 = 0;
-        var sum2 = 0;
-        await Judge();
-    }
+        	let answer = new Array(mode);
+        	for (x = 0; x < mode; x++){
+            		answer[x] = getNumber();
+        	}
+        	await speak(String(answer));
+        	var sum1 = 0;
+        	var sum2 = 0;
+        	await Judge();
+    	}
     //ここから成功の場合の処理
     //　↓　↓　↓　↓　↓　↓　↓　↓
 }
