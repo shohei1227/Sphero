@@ -1,17 +1,11 @@
-async function startProgram() {
-	// Write code here
-	let num = 0;
+function setMode(){
+    let num = 0;
 	mode = ["easy", "normal", "hard"];
-
-	await speak("ゲームのモードを選択してください");
-	await speak("最初はeasyにセットしてあります。");
-	await speak("スフィロを左右に動かして難易度を変更できます。");
-	await speak("難易度を選択できたら、スフィロを縦方向に動かしてください");
-	
-	while (true) {
+    // mode = [num = 0,num = 1,num = 2]
+    while (true) {
 		P = getOrientation().pitch;
 		R = getOrientation().roll;
-		Y = getOrientation().yaw;
+        Y = getOrientation().yaw;
 
 		if (R >= 30) {
 			setMainLed({ r: 255, g: 0, b: 0 });
@@ -28,56 +22,47 @@ async function startProgram() {
 			}
 			await speak(mode[num]);
 		}else if (P > 20 || P < -20){
+            setMainLed({ r: 0, g: 0, b: 0 });
 		    await speak(String(mode[num]) + "ですね")
 			break;
-        	}	
+        }
         await delay(0.5);
-	}
-	mode = num + 2; 
-	// mode -->> 2 easy
-	// mode -->> 3 normal
-	// mode -->> 4 hard
-    let number = new Array(mode);
-	while (true) {
-		for (i = 0; i <= (mode - 1); i++) {
-			number[i] = setNumber();
-		}
-		if (mode == 2){
-			if(number[0] !== number[1]){
-				break;
-			}
-		}else if (mode == 3) {
-			if (number[0] !== number[1] && number[0] !== number[2] && number[1] !== number[2]) {
-				break;
-			}
-		}else if (mode == 4){
-            		if (number[0] != number[1] && number[0] !== number[2] && number[0] !== number[3] && number[1] !== number[2] && number[1] !== number[3] && number[2] !== number[3]){
-                		break;
-            		}	
-		}
-		await delay(0.01);
-	}
-	//await speak(String(number)); sphero が考える値
-	//ここからプレイヤーの予想
-	JudgeNumber == "False";
-	while(JudgeNumber == "True"){
-        	let answer = new Array(mode);
-        	for (x = 0; x < mode; x++){
-            		answer[x] = getNumber();
-        	}
-        	await speak(String(answer));
-        	var sum1 = 0;
-        	var sum2 = 0;
-        	await Judge();
-    	}
-    //ここから成功の場合の処理
-    //　↓　↓　↓　↓　↓　↓　↓　↓
+    }
+    return num;
 }
-
 function setNumber() {
 	a = Math.trunc(Math.random() * 9 + 1);
 	return a;
 }
+function ArrayNum(p){　//これだけ後半部分でも使う。
+    let x = new Array(p);
+    return x;
+}
+function NumberNum(q){
+    let number = ArrayNum(q);
+    //解答の数字
+	for (i = 0; i < q; i++) {
+		number[i] = setNumber();
+    }
+    return number;  
+}
+function JudgeNumber(m){
+    var sum1 = 0;
+    var sum2 = 0;
+    for (j=0; j < m-1; j++){
+        for (k = j; k < m; k++){
+            sum1 += 1;
+            if (num[j] != num[k]){
+                sum2 += 1;
+            }
+        }
+    }
+    return [sum1, sum2];
+}
+
+//　↑　↑　↑　spheroが考える値の決定に必要な関数
+
+//ここからプレイヤーが数を決定する関数
 function getNumber(){
     let getNum = 0;
     ansnum = [1,2,3,4,5,6,7,8,9];
@@ -109,31 +94,72 @@ function getNumber(){
     gotNum = ansnum[getNum];
     return gotNum;
 }
-async function Judge(){
-    for (i = 0; i <= mode-1 ;i++){
+async function Judge(s){
+    var ans1 = 0;
+    var ans2 = 0;
+    for (i = 0; i < s ;i++){
         if (number[i] == answer[i]){
-            sum1 += 1;
+            ans1 += 1;
         }else if(number[i] !== answer[i]){
-            for (j = 0; j <= mode-1; j++){
+            for (j = 0; j < s; j++){
                 if (number[i] == ans[j]){
-                    sum2 += 1;
+                    ans2 += 1;
                 }
             }
         }
     }
-    if (sum1 == mode){
+    if (ans1 == s){
         JudgeNumber = "True";
     }else{
         JudgeNumber = "False";
-        if (sum1 > 0 && sum2 > 0){
-            await speak(String(sum1) + "イート、" + String(sum2) + "バイト");
-        }else if (sum1>0&&sum2==0){
-            await speak(String(sum1) + "イート");     
-        }else if (sum2> 0 && sum1== 0){
-            await speak(String(sum2) + "バイト");
-        }else if (sum1 == 0&& sum2 == 0){
+        if (ans1 > 0 && ans2 > 0){
+            await speak(String(ans1) + "イート、" + String(ans2) + "バイト");
+        }else if (ans1>0 && ans2==0){
+            await speak(String(ans1) + "イート");     
+        }else if (ans2> 0 && ans1== 0){
+            await speak(String(ans2) + "バイト");
+        }else if (ans1 == 0&& ans2 == 0){
             await speak("入力された数は含まれていません");
         }
-        
     }
 }
+
+
+
+//StartProgram
+
+async function startProgram() {
+	num = setMode();
+    mode = num + 2;
+    //mode == 2 --> easy
+    //mode == 3 --> normal
+    //mode == 4 --> hard 
+    while (true) {
+        num = NumberNum(mode);
+        //　↑ mode桁の数値をセット
+        // 数字が重複していたらループでやり直す
+        sum = JudgeNumber(mode);
+        if (sum[0] == sum[1]){
+            break;
+        }
+        await delay(0.01);
+    }
+	//await speak(String(num)); sphero が考える値
+    
+    var Judged = "False" ;
+    var score = 1;
+
+	while(Judged == "True"){
+        let answer = ArrayNum(mode);
+        for (x = 0; x < mode; x++){
+            answer[x] = getNumber();
+        }
+        await speak(String(answer) + "で解答します。");
+        await Judge(mode);
+        score += 1//解答に何回かかかったか
+    }
+    //ここから成功の場合の処理
+    //　↓　↓　↓　↓　↓　↓　↓　↓
+    await speak(score);
+}
+
