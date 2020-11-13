@@ -1,5 +1,9 @@
+var modenum = 0;
+var gotNum = 0;
+var score = 1;
+
 async function setMode(){
-    var num = 10002;
+	var num = 3000;
 	mode = ["easy", "normal", "hard"];
     // mode = [num = 0,num = 1,num = 2]
     while (true) {
@@ -10,16 +14,21 @@ async function setMode(){
 		if (R >= 30) {
 			setMainLed({ r: 255, g: 0, b: 0 });
 			num = num + 1;
-			num = num % 3;
-			await speak(String(mode[num]));
+			//await speak(String(num));
+			modenum = num % 3;
+			//await speak(String(modenum));
+			await speak(String(mode[modenum]));
 		}else if (R <= -30) {
 			setMainLed({ r: 0, g: 0, b: 255 });
 			num = num - 1;
-			num = num % 3;
-			await speak(String(mode[num]));
+			//await speak(String(num));
+			modenum = num % 3;
+			//await speak(String(modenum));
+			await speak(String(mode[modenum]));
 		}else if (P > 20 || P < -20){
-            setMainLed({ r: 0, g: 0, b: 0 });
-		    await speak("難易度は" + String(mode[num]) + "ですね")
+			setMainLed({ r: 0, g: 255, b: 0 });
+		    await speak("難易度は" + String(mode[modenum]) + "ですね")
+			setMainLed({ r: 0, g: 0, b: 0 });
 			break;
         }
         await delay(0.5);
@@ -62,7 +71,7 @@ function JudgeNumber(p){
 //ここからプレイヤーが数を決定する関数
 async function getNumber(){
     var getNum = 90000;
-    var gotNum = 0;
+	var getnum = 0;
     ansnum = [1,2,3,4,5,6,7,8,9];
     while (true) {
         P = getOrientation().pitch;
@@ -72,21 +81,23 @@ async function getNumber(){
         if (R >= 30) {
             setMainLed({ r: 255, g: 0, b: 0 });
             getNum = getNum + 1;
-            getNum = getNum % 9;
-            await speak(String(ansnum[getNum]));
+            getnum = getNum % 9;
+            await speak(String(ansnum[getnum]));
         }else if (R <= -30) {
             setMainLed({ r: 0, g: 0, b: 255 });
             getNum = getNum - 1;
-            getNum = getNum % 9;
-            await speak(String(ansnum[getNum]));
+            getnum = getNum % 9;
+            await speak(String(ansnum[getnum]));
         }else if (P > 20 || P < -20){
-            setMainLed({ r: 0, g: 0, b: 0 });
-            await speak(String(ansnum[getNum]) + "ですね")
+			setMainLed({ r: 0, g: 255, b: 0 });
+            await speak(String(ansnum[getnum]) + "ですね");
+			setMainLed({ r: 0, g: 0, b: 0 });
             break;
         } 
         await delay(0.5);
     }
-    gotNum = ansnum[getNum];
+    gotNum = getnum + 1;
+	//await speak(String(gotNum));
 }
 async function Judge(p){
     var ans1 = 0;
@@ -104,8 +115,11 @@ async function Judge(p){
     }
     if (ans1 == p){
         JudgeNumber = "True";
+		await speak("正解です");
+		await speak("スコアは" + String(score) + "です");
     }else{
         JudgeNumber = "False";
+		score += 1;//解答に何回かかかったか
         if (ans1 > 0 && ans2 > 0){
             await speak(String(ans1) + "イート、" + String(ans2) + "バイト");
         }else if (ans1 > 0 && ans2 == 0){
@@ -125,8 +139,8 @@ async function Judge(p){
 async function startProgram() {
     await setMode();
     var digit = 0;
-    digit = num + 2;
-    await speak("桁数は" + String(digit));
+    digit = modenum + 2;
+    await speak("桁数は" + String(digit) + "です");
     //mode == 2 --> easy
     //mode == 3 --> normal
     //mode == 4 --> hard 
@@ -140,22 +154,18 @@ async function startProgram() {
         }
         await delay(0.01);
     }
-	//await speak(String(num)); sphero が考える値
+	//await speak(String(number)); //sphero が考える値
     
     var Judged = "False" ;
-    var score = 1;
-
+	answer = new Array(digit);
+	
 	while(Judged == "False"){
-        var answer = ArrayNum(digit);
         for (x = 0; x < digit; x++){
             await getNumber();
+			await speak(String(x + 1) + "桁目に"　+ String(gotNum) + "を入力します")
             answer[x] = gotNum;
         }
         await speak(String(answer) + "で解答します。");
         await Judge(digit);
-        score += 1//解答に何回かかかったか
-    }
-    //ここから成功の場合の処理
-    //　↓　↓　↓　↓　↓　↓　↓　↓
-    await speak("スコアは" + score);
+    }  
 }
