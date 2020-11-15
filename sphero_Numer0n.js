@@ -99,6 +99,19 @@ async function getNumber(){
     gotNum = getnum + 1;
 	//await speak(String(gotNum));
 }
+function JudgeAnswerNumber(p){
+    var sumA = 0;
+    var sumB = 0;
+    for (j=0; j < p-1; j++){
+        for (k = j+1; k < p; k++){
+            sumA += 1;
+            if (answer[j] != answer[k]){
+                sumB += 1;
+            }
+        }
+    }
+    return [sumA, sumB];
+}
 async function Judge(p){
     var ans1 = 0;
     var ans2 = 0;
@@ -160,11 +173,19 @@ async function startProgram() {
 	answer = new Array(digit);
 	
 	while(Judged == "False"){
-        for (x = 0; x < digit; x++){
-            await getNumber();
-			await speak(String(x + 1) + "桁目に"　+ String(gotNum) + "を入力します")
-            answer[x] = gotNum;
-        }
+		while(true){
+			for (x = 0; x < digit; x++){
+				await getNumber();
+				await speak(String(x + 1) + "桁目に"　+ String(gotNum) + "を入力します")
+				answer[x] = gotNum;
+			}
+			ansSum = JudgeAnswerNumber(digit);
+			if (ansSum[0] == ansSum[1]){
+            	break;
+        	}else{
+				await speak("入力された数字に同じ数字が含まれています。再度入力、しなおしてください。")
+			}
+		}
         await speak(String(answer) + "で解答します。");
         await Judge(digit);
     }  
