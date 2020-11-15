@@ -150,43 +150,95 @@ async function Judge(p){
 //StartProgram
 
 async function startProgram() {
-    await setMode();
-    var digit = 0;
-    digit = modenum + 2;
-    await speak("桁数は" + String(digit) + "です");
-    //mode == 2 --> easy
-    //mode == 3 --> normal
-    //mode == 4 --> hard 
-    while (true) {
-        number = NumberNum(digit);
-        //　↑ mode桁の数値をセット
-        // 数字が重複していたらループでやり直す
-        sum = JudgeNumber(digit);
-        if (sum[0] == sum[1]){
-            break;
+    await speak("ルール説明を行います。省略する場合はスフィロを右に傾けてください。");
+    while (true){
+        P = getOrientation().pitch;
+        R = getOrientation().roll;
+        Y = getOrientation().yaw;
+        if (R >= 30){
+            await speak("省略バージョンです。")
+            await setMode();
+            var digit = 0;
+            digit = modenum + 2;
+            await speak("桁数は" + String(digit) + "です");
+            //mode == 2 --> easy
+            //mode == 3 --> normal
+            //mode == 4 --> hard 
+            while (true) {
+                number = NumberNum(digit);
+                //　↑ mode桁の数値をセット
+                // 数字が重複していたらループでやり直す
+                sum = JudgeNumber(digit);
+                if (sum[0] == sum[1]){
+                    break;
+                }
+                await delay(0.01);
+            }
+            //await speak(String(number)); //sphero が考える値
+            
+            var Judged = "False" ;
+            answer = new Array(digit);
+            
+            while(Judged == "False"){
+                while(true){
+                    for (x = 0; x < digit; x++){
+                        await getNumber();
+                        await speak(String(x + 1) + "桁目に"　+ String(gotNum) + "を入力します")
+                        answer[x] = gotNum;
+                    }
+                    ansSum = JudgeAnswerNumber(digit);
+                    if (ansSum[0] == ansSum[1]){
+                        break;
+                    }else{
+                        await speak("入力された数字に同じ数字が含まれています。再度入力、しなおしてください。")
+                    }
+                }
+                await speak(String(answer) + "で解答します。");
+                await Judge(digit);
+            }
+        }else if (R <= -30){
+            await speak("これからルールの説明を行います。");
+            await speak("なおこのゲームのプレイに必要な時間は、イージーモードで約　分。ノーマルモードで約　分。ハードモードで約　分となっています。");
+            await setMode();
+            var digit = 0;
+            digit = modenum + 2;
+            await speak("桁数は" + String(digit) + "です");
+            //mode == 2 --> easy
+            //mode == 3 --> normal
+            //mode == 4 --> hard 
+            while (true) {
+                number = NumberNum(digit);
+                //　↑ mode桁の数値をセット
+                // 数字が重複していたらループでやり直す
+                sum = JudgeNumber(digit);
+                if (sum[0] == sum[1]){
+                    break;
+                }
+                await delay(0.01);
+            }
+            //await speak(String(number)); //sphero が考える値
+            
+            var Judged = "False" ;
+            answer = new Array(digit);
+            
+            while(Judged == "False"){
+                while(true){
+                    for (x = 0; x < digit; x++){
+                        await getNumber();
+                        await speak(String(x + 1) + "桁目に"　+ String(gotNum) + "を入力します")
+                        answer[x] = gotNum;
+                    }
+                    ansSum = JudgeAnswerNumber(digit);
+                    if (ansSum[0] == ansSum[1]){
+                        break;
+                    }else{
+                        await speak("入力された数字に同じ数字が含まれています。再度入力、しなおしてください。")
+                    }
+                }
+                await speak(String(answer) + "で解答します。");
+                await Judge(digit);
+            }
         }
         await delay(0.01);
     }
-	//await speak(String(number)); //sphero が考える値
-    
-    var Judged = "False" ;
-	answer = new Array(digit);
-	
-	while(Judged == "False"){
-		while(true){
-			for (x = 0; x < digit; x++){
-				await getNumber();
-				await speak(String(x + 1) + "桁目に"　+ String(gotNum) + "を入力します")
-				answer[x] = gotNum;
-			}
-			ansSum = JudgeAnswerNumber(digit);
-			if (ansSum[0] == ansSum[1]){
-            	break;
-        	}else{
-				await speak("入力された数字に同じ数字が含まれています。再度入力、しなおしてください。")
-			}
-		}
-        await speak(String(answer) + "で解答します。");
-        await Judge(digit);
-    }  
 }
