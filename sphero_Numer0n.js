@@ -1,8 +1,10 @@
 var modenum = 0;
 var gotNum = 0;
 var score = 1;
+var digit = 0;
 
 async function setMode(){
+	await speak("最初に難易度を設定してください");
 	var num = 3000;
 	mode = ["easy", "normal", "hard"];
     // mode = [num = 0,num = 1,num = 2]
@@ -25,7 +27,43 @@ async function setMode(){
 			modenum = num % 3;
 			//await speak(String(modenum));
 			await speak(String(mode[modenum]));
-		}else if (P > 20 || P < -20){
+		}else if (P > 18 || P < -18){
+			setMainLed({ r: 0, g: 255, b: 0 });
+		    await speak("難易度は" + String(mode[modenum]) + "ですね")
+			setMainLed({ r: 0, g: 0, b: 0 });
+			break;
+        }
+        await delay(0.5);
+    }
+    //digit = num + 2;
+}
+async function setModeR(){
+	await speak("最初に難易度を設定してください");
+	await speak("すふぃろを横に傾けることによって難易度の変更を行うことができます。")
+	await speak("難易度の変更が終わったらすふぃろを縦方向に傾けてください。難易度が確定されます。")
+	var num = 3000;
+	mode = ["easy", "normal", "hard"];
+    // mode = [num = 0,num = 1,num = 2]
+    while (true) {
+		P = getOrientation().pitch;
+		R = getOrientation().roll;
+        Y = getOrientation().yaw;
+
+		if (R >= 30) {
+			setMainLed({ r: 255, g: 0, b: 0 });
+			num = num + 1;
+			//await speak(String(num));
+			modenum = num % 3;
+			//await speak(String(modenum));
+			await speak(String(mode[modenum]));
+		}else if (R <= -30) {
+			setMainLed({ r: 0, g: 0, b: 255 });
+			num = num - 1;
+			//await speak(String(num));
+			modenum = num % 3;
+			//await speak(String(modenum));
+			await speak(String(mode[modenum]));
+		}else if (P > 18 || P < -18){
 			setMainLed({ r: 0, g: 255, b: 0 });
 		    await speak("難易度は" + String(mode[modenum]) + "ですね")
 			setMainLed({ r: 0, g: 0, b: 0 });
@@ -112,6 +150,13 @@ function JudgeAnswerNumber(p){
     }
     return [sumA, sumB];
 }
+async function goRed(){
+	let m = 0;
+	for (m = 0; m <= 255 ; m += 51){
+		setMainLed({r:255 - m , g: 0 + m});
+		await spin(360,0.4)
+	}
+}		
 async function Judge(p){
     var ans1 = 0;
     var ans2 = 0;
@@ -128,19 +173,73 @@ async function Judge(p){
     }
     if (ans1 == p){
         JudgeNumber = "True";
+		//ここからながい
 		await speak("正解です");
+		await Sound.Game.WinBig;
+		await goRed();
 		await speak("スコアは" + String(score) + "です");
+		if (digit == 2){
+			if (score <= 3){
+				await Sound.Personality.Celebrate
+				await speak("素晴らしい！あなたは天才です")
+			}else if (score <= 8){
+				await Sound.Personality.Yawn
+				await speak("普通ですね")
+			}else{
+				await Sound.Personality.LaughNice
+				await speak("もう少し早く頑張りましょうね")
+			}
+		}else if (digit == 3){
+			if (score <= 4){
+				await Sound.Personality.Celebrate
+				await speak("素晴らしい！あなたは天才です")
+			}else if (score <= 10){
+				await Sound.Personality.Yawn
+				await speak("普通ですね")
+			}else{
+				await Sound.Personality.LaughNice
+				await speak("もう少し早く頑張りましょうね")
+			}
+		}else if (digit == 4){
+			if (score <= 5){
+				await Sound.Personality.Celebrate
+				await speak("素晴らしい！あなたは天才です")
+			}else if (score <= 12){
+				await Sound.Personality.Yawn
+				await speak("普通ですね")
+			}else{
+				await Sound.Personality.LaughNice
+				await speak("もう少し早く頑張りましょうね")
+			}
+		}
+		await speak("おめでとうございます")
+		
+		exitProgram();
     }else{
+		await Sound.Game.Error
         JudgeNumber = "False";
 		score += 1;//解答に何回かかかったか
         if (ans1 > 0 && ans2 > 0){
             await speak(String(ans1) + "イート、" + String(ans2) + "バイト");
+			
         }else if (ans1 > 0 && ans2 == 0){
-            await speak(String(ans1) + "イート");     
+            await speak(String(ans1) + "イート");
+			if (ans1 >= digit-2){
+				setMainLed({r:60,g:60,b:60});
+				setMainLed({r:0,g:0,b:0});
+			}
         }else if (ans2 > 0 && ans1 == 0){
             await speak(String(ans2) + "バイト");
+			if (ans2 >= digit-2){
+				setMainLed({r:25,g:25,b:25});
+				setMainLed({r:0,g:0,b:0});
+			}
         }else if (ans1 == 0&& ans2 == 0){
             await speak("入力された数は含まれていません");
+			for (a = 0; a <= 2; a++){
+				setMainLed({r:255,g:255,b:255});
+				setMainLed({r:0,g:0,b:0});
+			}
         }
     }
 }
@@ -150,7 +249,9 @@ async function Judge(p){
 //StartProgram
 
 async function startProgram() {
-    await speak("ルール説明を行います。省略する場合はスフィロを右に傾けてください。");
+	setStabilization(false);
+	setBackLed(255);
+    await speak("ルール説明を行います。省略する場合はスフィロを右に傾けてください。るーるの説明を聞く場合は左に傾けてください");
     while (true){
         P = getOrientation().pitch;
         R = getOrientation().roll;
@@ -158,7 +259,6 @@ async function startProgram() {
         if (R >= 30){
             await speak("省略バージョンです。")
             await setMode();
-            var digit = 0;
             digit = modenum + 2;
             await speak("桁数は" + String(digit) + "です");
             //mode == 2 --> easy
@@ -174,7 +274,7 @@ async function startProgram() {
                 }
                 await delay(0.01);
             }
-            //await speak(String(number)); //sphero が考える値
+            await speak(String(number)); //sphero が考える値
             
             var Judged = "False" ;
             answer = new Array(digit);
@@ -198,8 +298,8 @@ async function startProgram() {
             }
         }else if (R <= -30){
             await speak("これからルールの説明を行います。");
-            await speak("なおこのゲームのプレイに必要な時間は、イージーモードで約　分。ノーマルモードで約　分。ハードモードで約　分となっています。");
-            await setMode();
+            await speak("なおこのゲームのプレイに必要な時間は、イージーモードで約2分。ノーマルモードで約4分。ハードモードで約5分となっています。");
+            await setModeR();
             var digit = 0;
             digit = modenum + 2;
             await speak("桁数は" + String(digit) + "です");
@@ -217,8 +317,12 @@ async function startProgram() {
                 await delay(0.01);
             }
             //await speak(String(number)); //sphero が考える値
-            
-            var Judged = "False" ;
+            await speak("これからゲームのルール説明をします。このゲームはすふぃろが決めた数字を当てるゲームです。先ほど決定した難易度によって今回当てる数字の桁数が決まっています。");
+			await speak("これから、プレイヤーには難易度の選択と同じようにして数字の入力を行ってもらいます。数字が確定されるとすふぃろによって判定がされます。");
+			await speak("判定には、「イート」と「バイト」が用いられます。「イート」は入力した数字が答えの数字に含まれ、かつ桁数が一致しているときを指します。「バイト」は入力した数字が答えの数字に含まれるが、桁数が異なるときを指します。")
+			//await speak("理解できましたか。より具体的な例を聞きたい場合はすふぃろを右に傾けてください")
+			//if (R > 30)
+			var Judged = "False" ;
             answer = new Array(digit);
             
             while(Judged == "False"){
@@ -239,6 +343,6 @@ async function startProgram() {
                 await Judge(digit);
             }
         }
-        await delay(0.01);
+		await delay(0.01);
     }
 }
