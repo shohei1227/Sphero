@@ -365,6 +365,7 @@ async function startProgram() {
 					setMainLed({ r: 255, g: 255, b: 0 });
 					await delay(0.8);
 					setMainLed({ r: 0, g: 0, b: 0 });
+					await delay(1);
 					break;
 				}
 				await delay(0.1);
